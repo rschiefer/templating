@@ -2,9 +2,7 @@
   <Import Project="..\..\Version.props" />
 
   <PropertyGroup>    
-    <TargetFramework>netcoreapp1.1</TargetFramework>    
-    <SignAssembly>True</SignAssembly>    
-    <AssemblyOriginatorKeyFile>Key.snk</AssemblyOriginatorKeyFile>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
