@@ -29,7 +29,7 @@ namespace Microsoft.TemplateEngine.Cli.UnitTests
             Assert.Equal("git", installer.ExecuteProcessCommands[0][0]);
             Assert.Equal("clone", installer.ExecuteProcessCommands[0][1]);
             Assert.Equal(gitUrl, installer.ExecuteProcessCommands[0][2]);
-            Assert.Equal(".templating-temp", installer.ExecuteProcessCommands[0][3]);
+            Assert.Contains("scratch", installer.ExecuteProcessCommands[0][3]);
         }
     }
 
