@@ -209,12 +209,12 @@ namespace Microsoft.TemplateEngine.Cli
 
             foreach (var source in gitSources)
             {
-                ExecuteProcess("git", "clone", source.GitUrl);
+                ExecuteProcess("git", "clone", source.GitUrl, tempPath);
             }
 
             InstallLocalPackages(newLocalPackages);
 
-            _paths.DeleteDirectory(tempPath);
+            //_paths.DeleteDirectory(tempPath);
         }
 
         private void InstallLocalPackages(IReadOnlyList<string> packageNames)
@@ -276,8 +276,8 @@ namespace Microsoft.TemplateEngine.Cli
                 Arguments = string.Join(" ", args)
             };
             Process p = Process.Start(info);
-            p.BeginOutputReadLine();
-            p.BeginErrorReadLine();
+            //p.BeginOutputReadLine();
+            //p.BeginErrorReadLine();
             //p.ErrorDataReceived += OnErrorDataReceived;
             //p.OutputDataReceived += OnOutputDataReceived;
             p.WaitForExit();
