@@ -20,8 +20,19 @@ namespace Microsoft.TemplateEngine.Cli.UnitTests
         {
             GitSource source = null;
             var result = GitSource.TryParseGitSource(request, out source);
-
+            
             Assert.Equal(gitUrl, source.GitUrl);
+            Assert.Equal(true, result);
+        }
+        [Theory(DisplayName = nameof(GitUrlReturnsGitPackageWithSubFolder))]
+        [InlineData("https://github.com/acme/templates.git/sub/folder", "templates/sub/folder")]
+        [InlineData("https://github.com/acme/templates.git", "templates")]
+        public void GitUrlReturnsGitPackageWithSubFolder(string request, string subFolder)
+        {
+            GitSource source = null;
+            var result = GitSource.TryParseGitSource(request, out source);
+            
+            Assert.Equal(subFolder, source.SubFolder);
             Assert.Equal(true, result);
         }
         [Theory(DisplayName = nameof(NonGitUrlReturnsFalseNull))]
