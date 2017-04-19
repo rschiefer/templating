@@ -25,11 +25,14 @@ namespace Microsoft.TemplateEngine.Cli.UnitTests
             var installationRequests = new [] { request };
             installer.InstallPackages(installationRequests);
 
+            GitSource gitSource = null;
+            GitSource.TryParseGitSource(request, out gitSource);
+
             //IReadOnlyList<string> projFilesFound = actionProcessor.FindProjFileAtOrAbovePath(EngineEnvironmentSettings.Host.FileSystem, outputBasePath, new HashSet<string>());
             Assert.Equal("git", installer.ExecuteProcessCommands[0][0]);
             Assert.Equal("clone", installer.ExecuteProcessCommands[0][1]);
             Assert.Equal(gitUrl, installer.ExecuteProcessCommands[0][2]);
-            Assert.Contains("scratch", installer.ExecuteProcessCommands[0][3]);
+            Assert.Contains($"scratch\\{gitSource.RepositoryName}", installer.ExecuteProcessCommands[0][3]);
         }
     }
 
@@ -46,7 +49,6 @@ namespace Microsoft.TemplateEngine.Cli.UnitTests
         internal override bool ExecuteProcess(string command, params string[] args)
         {
             ExecuteProcessCommands.Add(new string[] { command }.Concat(args).ToArray());
-            //base.ExecuteProcess(command, args);
             return ExecuteProcessReturn;
         }
     }
