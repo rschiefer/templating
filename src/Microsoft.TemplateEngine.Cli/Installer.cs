@@ -202,14 +202,19 @@ namespace Microsoft.TemplateEngine.Cli
 
         private void InstallGitSources(List<GitSource> gitSources)
         {
-            _paths.CreateDirectory(_paths.User.ScratchDir);
+            if (_paths.DirectoryExists(_paths.User.ScratchDir) == false)
+            {
+                _paths.CreateDirectory(_paths.User.ScratchDir);
+            }
 
             var newLocalPackages = new List<string>();
 
             foreach (var source in gitSources)
             {
-                Console.WriteLine($"Cloning {source} to {_paths.User.ScratchDir}");
                 ExecuteProcess("git", "clone", source.GitUrl, _paths.User.ScratchDir);
+                var gitPackageFolder = $"{_paths.User.ScratchDir}/{source.SubFolder}";
+                Console.WriteLine($"Git package located at '{gitPackageFolder}'");
+                newLocalPackages.Add(gitPackageFolder);
             }
 
             InstallLocalPackages(newLocalPackages);
