@@ -10,6 +10,7 @@ using Microsoft.TemplateEngine.Abstractions;
 using Microsoft.TemplateEngine.Abstractions.Mount;
 using Microsoft.TemplateEngine.Edge;
 using Microsoft.TemplateEngine.Edge.Settings;
+using System.Diagnostics;
 
 namespace Microsoft.TemplateEngine.Cli
 {
@@ -28,6 +29,7 @@ namespace Microsoft.TemplateEngine.Cli
         {
             List<string> localSources = new List<string>();
             List<Package> packages = new List<Package>();
+            List<GitSource> gitSources = new List<GitSource>();
 
             foreach (string request in installationRequests)
             {
@@ -45,6 +47,10 @@ namespace Microsoft.TemplateEngine.Cli
                 {
                     packages.Add(package);
                 }
+                else if (GitSource.TryParseGitSource(req, out GitSource gitSource))
+                {
+                    gitSources.Add(gitSource);
+                }
                 else
                 {
                     localSources.Add(request);
@@ -59,6 +65,11 @@ namespace Microsoft.TemplateEngine.Cli
             if (packages.Count > 0)
             {
                 InstallRemotePackages(packages);
+            }
+
+            if (gitSources.Count > 0)
+            {
+                InstallGitSources(gitSources);
             }
 
             _environmentSettings.SettingsLoader.Save();
@@ -189,6 +200,23 @@ namespace Microsoft.TemplateEngine.Cli
             InstallLocalPackages(newLocalPackages);
         }
 
+        private void InstallGitSources(List<GitSource> gitSources)
+        {
+            var tempPath = ".templating-temp";
+            _paths.CreateDirectory(tempPath);
+
+            var newLocalPackages = new List<string>();
+
+            foreach (var source in gitSources)
+            {
+                ExecuteProcess("git", "clone", source.GitUrl);
+            }
+
+            InstallLocalPackages(newLocalPackages);
+
+            _paths.DeleteDirectory(tempPath);
+        }
+
         private void InstallLocalPackages(IReadOnlyList<string> packageNames)
         {
             List<string> toInstall = new List<string>();
@@ -236,6 +264,26 @@ namespace Microsoft.TemplateEngine.Cli
                     _environmentSettings.Host.OnNonCriticalError("InvalidPackageSpecification", string.Format(LocalizableStrings.BadPackageSpec, pkg), null, 0);
                 }
             }
+        }
+
+
+        internal virtual bool ExecuteProcess(string command, params string[] args)
+        {
+
+            var info = new ProcessStartInfo
+            {
+                FileName = command,
+                Arguments = string.Join(" ", args)
+            };
+            Process p = Process.Start(info);
+            p.BeginOutputReadLine();
+            p.BeginErrorReadLine();
+            //p.ErrorDataReceived += OnErrorDataReceived;
+            //p.OutputDataReceived += OnOutputDataReceived;
+            p.WaitForExit();
+
+            //return new Result(_stdout?.ToString(), _stderr?.ToString(), p.ExitCode);
+            return p.ExitCode == 0;
         }
     }
 }
