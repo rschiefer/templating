@@ -209,12 +209,12 @@ namespace Microsoft.TemplateEngine.Cli
 
             foreach (var source in gitSources)
             {
-                ExecuteProcess("git", "clone", source.GitUrl);
+                ExecuteProcess("git", "clone", source.GitUrl, tempPath);
             }
 
             InstallLocalPackages(newLocalPackages);
 
-            _paths.DeleteDirectory(tempPath);
+            //_paths.DeleteDirectory(tempPath);
         }
 
         private void InstallGitSources(List<GitSource> gitSources)
