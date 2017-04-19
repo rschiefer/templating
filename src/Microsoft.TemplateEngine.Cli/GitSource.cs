@@ -8,11 +8,13 @@ namespace Microsoft.TemplateEngine.Cli
     {
         public string GitUrl { get; set; }
         public string SubFolder { get; set; }
+        public string RepositoryName { get; set; }
 
-        public GitSource(string gitUrl, string subFolder)
+        public GitSource(string gitUrl, string subFolder, string repoName)
         {
             GitUrl = gitUrl;
             SubFolder = subFolder;
+            RepositoryName = repoName;
         }
 
         public static bool TryParseGitSource(string spec, out GitSource package)
@@ -33,8 +35,12 @@ namespace Microsoft.TemplateEngine.Cli
                 {
                     indexOfLastSlashBeforeGit = indexOfSlash;
                 }
-                var subFolder = spec.Substring(indexOfLastSlashBeforeGit + 1).Replace(".git", string.Empty);
-                package = new GitSource(spec.Substring(0, index), subFolder);
+
+                var gitUrl = spec.Substring(0, index);
+                var subFolder = spec.Substring(index);
+                subFolder = subFolder.Trim('/');
+                var repoName = gitUrl.Substring(indexOfLastSlashBeforeGit + 1).Replace(".git", string.Empty);
+                package = new GitSource(gitUrl, subFolder, repoName);
                 return true;
             }
         }
