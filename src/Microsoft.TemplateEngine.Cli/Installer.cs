@@ -202,6 +202,23 @@ namespace Microsoft.TemplateEngine.Cli
 
         private void InstallGitSources(List<GitSource> gitSources)
         {
+            var tempPath = ".templating-temp";
+            _paths.CreateDirectory(tempPath);
+
+            var newLocalPackages = new List<string>();
+
+            foreach (var source in gitSources)
+            {
+                ExecuteProcess("git", "clone", source.GitUrl);
+            }
+
+            InstallLocalPackages(newLocalPackages);
+
+            _paths.DeleteDirectory(tempPath);
+        }
+
+        private void InstallGitSources(List<GitSource> gitSources)
+        {
             if (_paths.DirectoryExists(_paths.User.ScratchDir) == false)
             {
                 _paths.CreateDirectory(_paths.User.ScratchDir);
