@@ -25,14 +25,24 @@ namespace Microsoft.TemplateEngine.Cli.UnitTests
             Assert.Equal(true, result);
         }
         [Theory(DisplayName = nameof(GitUrlReturnsGitPackageWithSubFolder))]
-        [InlineData("https://github.com/acme/templates.git/sub/folder", "templates/sub/folder")]
-        [InlineData("https://github.com/acme/templates.git", "templates")]
+        [InlineData("https://github.com/acme/templates.git/sub/folder", "sub/folder")]
+        [InlineData("https://github.com/acme/templates.git", "")]
         public void GitUrlReturnsGitPackageWithSubFolder(string request, string subFolder)
         {
             GitSource source = null;
             var result = GitSource.TryParseGitSource(request, out source);
-            
+
             Assert.Equal(subFolder, source.SubFolder);
+            Assert.Equal(true, result);
+        }
+        [Theory(DisplayName = nameof(GitUrlReturnsGitPackageWithRepoName))]
+        [InlineData("https://github.com/acme/templates.git/sub/folder", "templates")]
+        public void GitUrlReturnsGitPackageWithRepoName(string request, string repoName)
+        {
+            GitSource source = null;
+            var result = GitSource.TryParseGitSource(request, out source);
+
+            Assert.Equal(repoName, source.RepositoryName);
             Assert.Equal(true, result);
         }
         [Theory(DisplayName = nameof(NonGitUrlReturnsFalseNull))]
