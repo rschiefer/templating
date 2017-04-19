@@ -202,14 +202,19 @@ namespace Microsoft.TemplateEngine.Cli
 
         private void InstallGitSources(List<GitSource> gitSources)
         {
-            _paths.CreateDirectory(_paths.User.ScratchDir);
+            if (_paths.DirectoryExists(_paths.User.ScratchDir) == false)
+            {
+                _paths.CreateDirectory(_paths.User.ScratchDir);
+            }
 
             var newLocalPackages = new List<string>();
 
             foreach (var source in gitSources)
             {
-                Console.WriteLine($"Cloning {source} to {_paths.User.ScratchDir}");
                 ExecuteProcess("git", "clone", source.GitUrl, _paths.User.ScratchDir);
+                var gitPackageFolder = $"{_paths.User.ScratchDir}/{source.SubFolder}";
+                Console.WriteLine($"Git package located at '{gitPackageFolder}'");
+                newLocalPackages.Add(gitPackageFolder);
             }
 
             InstallLocalPackages(newLocalPackages);
@@ -275,15 +280,17 @@ namespace Microsoft.TemplateEngine.Cli
                 FileName = command,
                 Arguments = string.Join(" ", args)
             };
-            Process p = Process.Start(info);
-            //p.BeginOutputReadLine();
-            //p.BeginErrorReadLine();
-            //p.ErrorDataReceived += OnErrorDataReceived;
-            //p.OutputDataReceived += OnOutputDataReceived;
-            p.WaitForExit();
+            using (Process p = Process.Start(info))
+            {
+                //p.BeginOutputReadLine();
+                //p.BeginErrorReadLine();
+                //p.ErrorDataReceived += OnErrorDataReceived;
+                //p.OutputDataReceived += OnOutputDataReceived;
+                p.WaitForExit();
 
-            //return new Result(_stdout?.ToString(), _stderr?.ToString(), p.ExitCode);
-            return p.ExitCode == 0;
+                //return new Result(_stdout?.ToString(), _stderr?.ToString(), p.ExitCode);
+                return p.ExitCode == 0;
+            }
         }
     }
 }
