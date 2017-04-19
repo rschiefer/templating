@@ -27,7 +27,14 @@ namespace Microsoft.TemplateEngine.Cli
             else
             {
                 var index = gitIndex + 4;
-                package = new GitSource(spec.Substring(0, index), spec.Substring(index));
+                var indexOfLastSlashBeforeGit = -1;
+                var indexOfSlash = -1;
+                while ((indexOfSlash = spec.IndexOf('/', indexOfLastSlashBeforeGit + 1)) < index && indexOfSlash != -1)
+                {
+                    indexOfLastSlashBeforeGit = indexOfSlash;
+                }
+                var subFolder = spec.Substring(indexOfLastSlashBeforeGit + 1).Replace(".git", string.Empty);
+                package = new GitSource(spec.Substring(0, index), subFolder);
                 return true;
             }
         }
