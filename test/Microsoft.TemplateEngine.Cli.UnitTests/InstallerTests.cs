@@ -6,23 +6,22 @@ using System.IO;
 using System.Text;
 using System.Linq;
 using Xunit;
+using Microsoft.TemplateEngine.Abstractions.PhysicalFileSystem;
+using System;
+using Microsoft.TemplateEngine.Cli;
 
 namespace Microsoft.TemplateEngine.Cli.UnitTests
 {
     public class InstallerTests : TestBase
     {
         [Theory(DisplayName = nameof(GitTemplatePathCallsGitClone))]
-        [InlineData("https://github.com/acme/templates.git/sub/folder", "https://github.com/acme/templates.git")]
-        [InlineData("https://github.com/acme/templates.git", "https://github.com/acme/templates.git")]
-        public void GitTemplatePathCallsGitClone(string request, string gitUrl)
+        [InlineData("https://github.com/acme/templates.git/sub/folder")]
+        [InlineData("https://github.com/acme/templates.git")]
+        public void GitTemplatePathCallsGitClone(string request)
         {
-            //string targetBasePath = FileSystemHelpers.GetNewVirtualizedPath(EngineEnvironmentSettings);
-            //string projFileFullPath = Path.Combine(targetBasePath, "MyApp.proj");
-            //EngineEnvironmentSettings.Host.FileSystem.WriteAllText(projFileFullPath, TestCsprojFile);
-
             InstallerTestWrapper installer = new InstallerTestWrapper(this.EnvironmentSettings);
 
-            var installationRequests = new [] { request };
+            var installationRequests = new[] { request };
             installer.InstallPackages(installationRequests);
 
             GitSource gitSource = null;
@@ -31,11 +30,46 @@ namespace Microsoft.TemplateEngine.Cli.UnitTests
             //IReadOnlyList<string> projFilesFound = actionProcessor.FindProjFileAtOrAbovePath(EngineEnvironmentSettings.Host.FileSystem, outputBasePath, new HashSet<string>());
             Assert.Equal("git", installer.ExecuteProcessCommands[0][0]);
             Assert.Equal("clone", installer.ExecuteProcessCommands[0][1]);
-            Assert.Equal(gitUrl, installer.ExecuteProcessCommands[0][2]);
-            Assert.Contains($"scratch\\{gitSource.RepositoryName}", installer.ExecuteProcessCommands[0][3]);
+            Assert.Equal(gitSource.GitUrl, installer.ExecuteProcessCommands[0][2]);
+            Assert.Contains($"scratch/{gitSource.RepositoryName}", installer.ExecuteProcessCommands[0][3]);
+        }
+        [Theory(DisplayName = nameof(GitTemplatePathCallsInstallLocalPackageWithCloneDirectory))]
+        [InlineData("https://github.com/acme/templates.git/sub/folder")]
+        [InlineData("https://github.com/acme/templates.git")]
+        public void GitTemplatePathCallsInstallLocalPackageWithCloneDirectory(string request)
+        {
+            FileSystemTestWrapper fileSystemTestWrapper = new FileSystemTestWrapper();
+            (this.EnvironmentSettings.Host as TestHelper.TestHost).FileSystem = fileSystemTestWrapper;
+            
+            GitSource gitSource = null;
+            GitSource.TryParseGitSource(request, out gitSource);
+
+            bool cloneDirectoryFound = false;
+            fileSystemTestWrapper.VerifyDirectoryExists = path =>
+            {
+                if (path.Contains($"scratch/{gitSource.RepositoryName}/{gitSource.SubFolder}")) {
+                    cloneDirectoryFound = true;
+                }
+            };
+
+            var installer = new Installer(this.EnvironmentSettings);
+            var installationRequests = new[] { request };
+            installer.InstallPackages(installationRequests);
+
+            Assert.True(cloneDirectoryFound, "Clone directory was found.");
         }
     }
 
+    internal class FileSystemTestWrapper : PhysicalFileSystem, IPhysicalFileSystem
+    {
+        public Action<string> VerifyDirectoryExists { get; set; }
+
+        public new bool DirectoryExists(string directory)
+        {
+            VerifyDirectoryExists(directory);
+            return base.DirectoryExists(directory);
+        }
+    }
     internal class InstallerTestWrapper : Installer
     {
         public InstallerTestWrapper(IEngineEnvironmentSettings environmentSettings) : base(environmentSettings)
