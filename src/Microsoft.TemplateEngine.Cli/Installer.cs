@@ -216,29 +216,7 @@ namespace Microsoft.TemplateEngine.Cli
             InstallLocalPackages(newLocalPackages);
             _paths.DeleteDirectory(_paths.User.ScratchDir);
         }
-
-        private void InstallGitSources(List<GitSource> gitSources)
-        {
-            if (_paths.DirectoryExists(_paths.User.ScratchDir) == false)
-            {
-                _paths.CreateDirectory(_paths.User.ScratchDir);
-            }
-
-            var newLocalPackages = new List<string>();
-
-            foreach (var source in gitSources)
-            {
-                ExecuteProcess("git", "clone", source.GitUrl, _paths.User.ScratchDir);
-                var gitPackageFolder = $"{_paths.User.ScratchDir}/{source.SubFolder}";
-                Console.WriteLine($"Git package located at '{gitPackageFolder}'");
-                newLocalPackages.Add(gitPackageFolder);
-            }
-
-            InstallLocalPackages(newLocalPackages);
-
-            _paths.DeleteDirectory(_paths.User.ScratchDir);
-        }
-
+        
         private void InstallLocalPackages(IReadOnlyList<string> packageNames)
         {
             List<string> toInstall = new List<string>();
