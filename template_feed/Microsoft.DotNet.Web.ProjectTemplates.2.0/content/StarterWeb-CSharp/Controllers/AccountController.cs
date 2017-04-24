@@ -6,12 +6,12 @@ using System.Security.Claims;
 #endif
 using System.Threading.Tasks;
 #if (OrganizationalAuth || IndividualB2CAuth)
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.AspNetCore.Http.Authentication;
-using Microsoft.AspNetCore.Http.Features.Authentication;
 #endif
 #if (IndividualLocalAuth)
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 #endif
@@ -69,7 +69,7 @@ namespace Company.WebApplication1.Controllers
         {
             var properties = new AuthenticationProperties() { RedirectUri = "/" };
             properties.Items[AzureAdB2COptions.PolicyAuthenticationProperty] = AzureAdB2COptions.EditProfilePolicyId;
-            await HttpContext.Authentication.ChallengeAsync(
+            await HttpContext.ChallengeAsync(
                 OpenIdConnectDefaults.AuthenticationScheme, properties, ChallengeBehavior.Unauthorized);
         }
         
@@ -104,19 +104,16 @@ namespace Company.WebApplication1.Controllers
         private readonly IEmailSender _emailSender;
         private readonly ISmsSender _smsSender;
         private readonly ILogger _logger;
-        private readonly string _externalCookieScheme;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
-            IOptions<IdentityCookieOptions> identityCookieOptions,
             IEmailSender emailSender,
             ISmsSender smsSender,
             ILoggerFactory loggerFactory)
         {
             _userManager = userManager;
             _signInManager = signInManager;
-            _externalCookieScheme = identityCookieOptions.Value.ExternalCookieAuthenticationScheme;
             _emailSender = emailSender;
             _smsSender = smsSender;
             _logger = loggerFactory.CreateLogger<AccountController>();
@@ -129,7 +126,7 @@ namespace Company.WebApplication1.Controllers
         public async Task<IActionResult> Login(string returnUrl = null)
         {
             // Clear the existing external cookie to ensure a clean login process
-            await HttpContext.Authentication.SignOutAsync(_externalCookieScheme);
+            await HttpContext.SignOutAsync(IdentityCookieOptions.ExternalScheme);
 
             ViewData["ReturnUrl"] = returnUrl;
             return View();
